@@ -1,7 +1,9 @@
+import Dashboard from "./pages/dashboard";
+
 function App() {
   return (
     <div>
-      <h1>Momentum AI mm</h1>
+      <Dashboard/>
     </div>
   );
 }
