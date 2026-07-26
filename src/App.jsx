@@ -1,10 +1,14 @@
+// import Sidebar from "./Components/layout/Sidebar";
+import MainLayout from "./layouts/MainLayout";
 import Dashboard from "./pages/dashboard";
 
 function App() {
   return (
-    <div>
-      <Dashboard/>
-    </div>
+    <>
+      <MainLayout>
+        <Dashboard />
+      </MainLayout>
+    </>
   );
 }
 
