@@ -2,47 +2,45 @@ import {
   LuListTodo,
   LuCheckCheck,
   LuClock3,
-  LuTarget,
 } from "react-icons/lu";
 
-import StatCard from "../components/dashboard/StatCard";
-import ProgressCard from "../components/dashboard/ProgressCard";
+import StatCard from "../Components/dashboard/StatCard";
+import ProgressCard from "../Components/dashboard/ProgressCard";
 import TasksCard from "../Components/dashboard/TaskCard";
-import { useState } from "react";
+// import { useEffect, useState } from "react";
+import QuickActions from "../Components/dashboard/QuickActions";
+import AddTaskForm from "../Components/dashboard/AddTaskForm";
+import { useTasks } from "../context/TaskContext";
 
-const initialTasks = [
-  {
-    id: 1,
-    title: "Learn React",
-    completed: false,
-  },
-  {
-    id: 2,
-    title: "Go to Gym",
-    completed: true,
-  },
-  {
-    id: 3,
-    title: "Build Momentum AI",
-    completed:false,
-  },
-  {
-    id: 4,
-    title: "Read AI Notes",
-    completed:false,
-  },
-];
+// const initialTasks = [
+//   {
+//     id: 1,
+//     title: "Learn React",
+//     completed: false,
+//   },
+//   {
+//     id: 2,
+//     title: "Go to Gym",
+//     completed: true,
+//   },
+//   {
+//     id: 3,
+//     title: "Build Momentum AI",
+//     completed:false,
+//   },
+//   {
+//     id: 4,
+//     title: "Read AI Notes",
+//     completed:false,
+//   },
+// ];
 function Dashboard() {
-  const [tasks, setTasks] = useState(initialTasks);
-  function taskToggle(id){
-   setTasks((prevTasks) =>
-    prevTasks.map((task) =>
-      task.id === id
-        ? { ...task, completed: !task.completed }
-        : task
-    )
-  );
-  }
+  const {
+    tasks,
+    addTask,
+    taskToggle,
+    deleteTask,
+  } = useTasks();
   const completedTasks = tasks.filter(task => task.completed).length;
   const totalTasks = tasks.length;
   const stats = [
@@ -83,14 +81,20 @@ function Dashboard() {
     />
   ))}
 </div>
-<div className="mt-8">
+<div className="mt-8 grid grid-cols-2 gap-6">
   <ProgressCard
     title="Today's Progress"
     completed={completedTasks}
     total={totalTasks}
 />
+<QuickActions/>
 </div>
-<TasksCard tasks={tasks} onToggle={taskToggle} />
+<div className="mt-6">
+
+<AddTaskForm onAddTask={addTask} />
+
+<TasksCard className="mt-6" tasks={tasks} onToggle={taskToggle}  onDelete={deleteTask} />
+</div>
 
     </div>
   );

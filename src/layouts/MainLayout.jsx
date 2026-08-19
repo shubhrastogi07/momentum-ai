@@ -1,7 +1,9 @@
-import Sidebar from "../components/layout/Sidebar";
-import Header from "../components/layout/Header";
+import Sidebar from "../Components/layout/Sidebar";
+import Header from "../Components/layout/Header";
+import { Outlet } from "react-router-dom";
 
-function MainLayout({ children }) {
+
+function MainLayout() {
   return (
     <div className="flex min-h-screen bg-slate-50">
   <Sidebar />
@@ -10,7 +12,7 @@ function MainLayout({ children }) {
     <Header />
 
     <main className="flex-1 p-8">
-      {children}
+      <Outlet/>
     </main>
   </div>
 </div>
