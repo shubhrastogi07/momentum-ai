@@ -2,13 +2,15 @@ import {
   LuListTodo,
   LuCheckCheck,
   LuClock3,
-  LuTarget,
 } from "react-icons/lu";
 
-import StatCard from "../components/dashboard/StatCard";
-import ProgressCard from "../components/dashboard/ProgressCard";
+import StatCard from "../Components/dashboard/StatCard";
+import ProgressCard from "../Components/dashboard/ProgressCard";
 import TasksCard from "../Components/dashboard/TaskCard";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import QuickActions from "../Components/dashboard/QuickActions";
+import AddTaskForm from "../Components/dashboard/AddTaskForm";
+
 
 const initialTasks = [
   {
@@ -33,7 +35,14 @@ const initialTasks = [
   },
 ];
 function Dashboard() {
-  const [tasks, setTasks] = useState(initialTasks);
+ const [tasks, setTasks] = useState(() => {
+  const savedTasks = localStorage.getItem("tasks");
+
+  return savedTasks ? JSON.parse(savedTasks) : initialTasks;
+});
+useEffect(() => {
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+}, [tasks]);
   function taskToggle(id){
    setTasks((prevTasks) =>
     prevTasks.map((task) =>
@@ -43,6 +52,22 @@ function Dashboard() {
     )
   );
   }
+  const addTask = (title,dueDate) => {
+  const newTask = {
+    id: Date.now(),
+    title,
+    completed: false,
+    dueDate,
+  };
+
+  setTasks((prevTasks) => [...prevTasks, newTask]);
+};
+
+const deleteTask = (id) => {
+  setTasks((prevTasks) =>
+    prevTasks.filter((task) => task.id !== id)
+  );
+};
   const completedTasks = tasks.filter(task => task.completed).length;
   const totalTasks = tasks.length;
   const stats = [
@@ -83,14 +108,20 @@ function Dashboard() {
     />
   ))}
 </div>
-<div className="mt-8">
+<div className="mt-8 grid grid-cols-2 gap-6">
   <ProgressCard
     title="Today's Progress"
     completed={completedTasks}
     total={totalTasks}
 />
+<QuickActions/>
 </div>
-<TasksCard tasks={tasks} onToggle={taskToggle} />
+<div className="mt-6">
+
+<AddTaskForm onAddTask={addTask} />
+
+<TasksCard className="mt-6" tasks={tasks} onToggle={taskToggle}  onDelete={deleteTask} />
+</div>
 
     </div>
   );
