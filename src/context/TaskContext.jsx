@@ -34,12 +34,14 @@ export function TaskProvider({ children }) {
     localStorage.setItem("tasks", JSON.stringify(tasks));
   }, [tasks]);
 
-  const addTask = (title, dueDate) => {
+  const addTask = (title, dueDate,priority, estimatedMinutes) => {
     const newTask = {
       id: Date.now(),
       title,
       completed: false,
       dueDate,
+      priority,
+      estimatedMinutes
     };
 
     setTasks((prevTasks) => [...prevTasks, newTask]);
