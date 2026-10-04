@@ -1,59 +1,88 @@
 import { useState } from "react";
 import { LuSparkles } from "react-icons/lu";
 import { useTasks } from "../context/TaskContext";
+import { generateAIPlan } from "../services/gemini";
 
 function AIPlanner() {
   const [availableTime, setAvailableTime] = useState(3);
   const [startTime, setStartTime] = useState("19:00");
-  const { tasks } = useTasks();
+  const { tasks, tasktoggle } = useTasks();
   const [plan, setPlan] = useState([]);
-  const handlePlanDay = () => {
-//   console.log("Available Time:", availableTime);
-//   console.log("Start Time:", startTime);
-//   console.log("Tasks:", tasks);
- const plan = generateMockPlan();
+  const [unscheduledTasks, setUnscheduledTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const handlePlanDay = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  console.log("Generated Plan:", plan);
-  setPlan(plan);
-};
- 
+      const availableMinutes = availableTime * 60;
 
-const generateMockPlan = () => {
-  const availableMinutes = availableTime * 60;
+      const pendingTasks = tasks.filter((task) => !task.completed);
 
-  // Only consider incomplete tasks
-  const pendingTasks = tasks.filter(
-    (task) => !task.completed
-  );
+      const result = await generateAIPlan(
+        pendingTasks,
+        availableMinutes,
+        startTime
+      );
 
-  // Priority order
-  const priorityValue = {
-    high: 1,
-    medium: 2,
-    low: 3,
+      console.log("Gemini response:", result);
+
+      // Remove markdown code fences if Gemini adds them
+      const cleanedResult = result
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
+
+      const parsedResult = JSON.parse(cleanedResult);
+
+      setPlan(parsedResult.schedule || []);
+      setUnscheduledTasks(parsedResult.unscheduledTasks || []);
+
+    } catch (error) {
+      console.error(error);
+      setError("Something went wrong while generating your plan.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Sort tasks by priority
-  const sortedTasks = [...pendingTasks].sort(
-    (a, b) =>
-      priorityValue[a.priority] -
-      priorityValue[b.priority]
-  );
+  // const generateMockPlan = () => {
+  //   const availableMinutes = availableTime * 60;
 
-  let remainingMinutes = availableMinutes;
+  //   // Only consider incomplete tasks
+  //   const pendingTasks = tasks.filter(
+  //     (task) => !task.completed
+  //   );
 
-  const plan = [];
+  //   // Priority order
+  //   const priorityValue = {
+  //     high: 1,
+  //     medium: 2,
+  //     low: 3,
+  //   };
 
-  for (const task of sortedTasks) {
-    if (task.estimatedMinutes <= remainingMinutes) {
-      plan.push(task);
+  //   // Sort tasks by priority
+  //   const sortedTasks = [...pendingTasks].sort(
+  //     (a, b) =>
+  //       priorityValue[a.priority] -
+  //       priorityValue[b.priority]
+  //   );
 
-      remainingMinutes -= task.estimatedMinutes;
-    }
-  }
+  //   let remainingMinutes = availableMinutes;
 
-  return plan;
-};
+  //   const plan = [];
+
+  //   for (const task of sortedTasks) {
+  //     if (task.estimatedMinutes <= remainingMinutes) {
+  //       plan.push(task);
+
+  //       remainingMinutes -= task.estimatedMinutes;
+  //     }
+  //   }
+
+  //   return plan;
+  // };
 
   return (
     <div>
@@ -119,52 +148,91 @@ const generateMockPlan = () => {
           {/* Button */}
           <button
             onClick={handlePlanDay}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-medium text-white transition hover:bg-indigo-700"
+            disabled={loading}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3 font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <LuSparkles size={18} />
 
-            Plan My Day
+            {loading ? "Planning..." : "Plan My Day"}
           </button>
+          {error && (
+            <p className="mt-3 text-sm text-red-500">
+              {error}
+            </p>
+          )}
         </div>
       </div>
       {plan.length > 0 && (
-  <div className="mt-6 max-w-2xl rounded-2xl border border-slate-200 bg-white p-6">
-    <h2 className="text-lg font-semibold text-slate-900">
-      Your Plan
-    </h2>
+        <div className="mt-8 rounded-2xl bg-white border border-slate-200 p-6">
+          <div className="flex items-center gap-2">
+            <LuSparkles className="text-indigo-600" />
 
-    <div className="mt-4 space-y-3">
-      {plan.map((task) => (
-        <div
-          key={task.id}
-          className="flex items-center justify-between rounded-xl bg-slate-50 p-4"
-        >
-          <div>
-            <p className="font-medium text-slate-800">
-              {task.title}
-            </p>
-
-            <p className="mt-1 text-sm text-slate-500">
-              {task.estimatedMinutes} minutes
-            </p>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Your AI Plan
+            </h2>
           </div>
 
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-medium ${
-              task.priority === "high"
-                ? "bg-red-100 text-red-600"
-                : task.priority === "medium"
-                ? "bg-yellow-100 text-yellow-600"
-                : "bg-green-100 text-green-600"
-            }`}
-          >
-            {task.priority}
-          </span>
+          <div className="mt-5 space-y-3">
+            {plan.map((item, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between rounded-xl border border-slate-200 p-4 hover:bg-slate-50"
+              >
+                <div>
+                  <p className="font-medium text-slate-800">
+                    {item.title}
+                  </p>
+
+                  <p className="mt-1 text-sm text-slate-500">
+                    {item.startTime} → {item.endTime}
+                  </p>
+
+                  {item.reason && (
+                    <p className="mt-2 text-sm text-slate-400">
+                      💡 {item.reason}
+                    </p>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => tasktoggle(item.taskId)}
+                  className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                >
+                  Complete
+                </button>
+              </div>
+            ))}
+          </div>
+          {unscheduledTasks.length > 0 && (
+            <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-6">
+              <h2 className="text-lg font-semibold text-amber-900">
+                Tasks Not Scheduled
+              </h2>
+
+              <p className="mt-1 text-sm text-amber-700">
+                These tasks couldn't fit into your available time.
+              </p>
+
+              <div className="mt-4 space-y-3">
+                {unscheduledTasks.map((item, index) => (
+                  <div
+                    key={index}
+                    className="rounded-xl border border-amber-200 bg-white p-4"
+                  >
+                    <p className="font-medium text-slate-800">
+                      {item.title}
+                    </p>
+
+                    <p className="mt-1 text-sm text-slate-500">
+                      {item.reason}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-      ))}
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 }

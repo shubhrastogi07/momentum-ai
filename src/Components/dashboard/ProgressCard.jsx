@@ -1,5 +1,8 @@
 function ProgressCard({ title, completed, total }) {
-  const progress = Math.round((completed / total) * 100);
+  const progress =
+    total === 0
+      ? 0
+      : Math.round((completed / total) * 100);
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">

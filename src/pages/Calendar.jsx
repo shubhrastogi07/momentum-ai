@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LuChevronLeft, LuChevronRight } from "react-icons/lu";
 import { useTasks } from "../context/TaskContext";
+import { getLocalDateString } from "../utils/date";
 
 function Calendar() {
   const { tasks } = useTasks();
@@ -8,7 +9,7 @@ function Calendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    getLocalDateString()
   );
 
   const year = currentDate.getFullYear();
@@ -51,7 +52,7 @@ function Calendar() {
   const getDateString = (day) => {
     const date = new Date(year, month, day);
 
-    return date.toISOString().split("T")[0];
+    return getLocalDateString(date);
   };
 
   const getTasksForDate = (day) => {
